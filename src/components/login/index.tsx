@@ -35,7 +35,7 @@ class Login extends React.Component<Props, State> {
     } else {
       const success = await login(username, password)
       if (success instanceof Error) {
-        this.setState({ error: success.message })
+        this.setState({ error: "Incorrect login." })
       } else {
         this.props.login(() => this.setState({ redirect: "/home" }))
       }

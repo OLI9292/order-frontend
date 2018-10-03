@@ -20,7 +20,7 @@ class App extends React.Component<any, State> {
     super(props)
 
     this.state = {
-      isAuthenticated: true,
+      isAuthenticated: false,
       checkedAuth: false
     }
   }
