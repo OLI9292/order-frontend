@@ -3,12 +3,16 @@ import styled from "styled-components"
 interface Props {
   color?: string
   hide?: boolean
+  margin?: string
+  height?: string
 }
 
 const M = styled.p`
   color: ${(p: Props) => p.color};
   font-family: Source Sans Pro;
   visibility: ${(p: Props) => (p.hide ? "hidden" : "visible")};
+  margin: ${(p: Props) => p.margin};
+  height: ${(p: Props) => p.height};
 `
 
 const S = M.extend`

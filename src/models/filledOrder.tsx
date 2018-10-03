@@ -13,7 +13,11 @@ export enum BuySell {
   S
 }
 
-export const EDITABLE_FIELDS = ["strategy_id", "client_id"]
+export const EDITABLE_FIELDS = [
+  "strategy_id",
+  "client_id",
+  "clearing_account_id"
+]
 
 export interface FilledOrder {
   id: string
@@ -48,11 +52,32 @@ export const fetchFilledOrders = async (): Promise<FilledOrder[] | Error> => {
   return query(gqlQuery, "filledOrder")
 }
 
-export const uploadFilledOrders = (file: File) =>
+export const updateFilledOrder = async (
+  id: string,
+  attr: string,
+  value: string
+): Promise<FilledOrder | Error> => {
+  const gqlQuery = `mutation { updateFilledOrder(id: "${id}", attr: "${attr}", value: "${value}") { ${fields} } }`
+  return query(gqlQuery, "updateFilledOrder")
+}
+
+export const updateFilledOrders = async (
+  ids: string[],
+  attr: string,
+  value: string
+): Promise<FilledOrder[] | Error> => {
+  const gqlQuery = `mutation { updateFilledOrders(ids: "${ids.join(
+    ","
+  )}", attr: "${attr}", value: "${value}") { ${fields} } }`
+  return query(gqlQuery, "updateFilledOrders")
+}
+
+export const uploadFilledOrders = (
+  formData: FormData
+): Promise<FilledOrder[] | Error> =>
   fetch(`${CONFIG.API_URL}/file-upload`, {
     method: "POST",
-    body: file
+    body: formData
   })
     .then(res => res.json())
-    .then(success => console.log(success))
-    .catch(error => console.log(error))
+    .then(json => (json.error ? Error(json.error) : json))

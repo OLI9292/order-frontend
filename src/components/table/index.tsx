@@ -1,22 +1,28 @@
 import * as React from "react"
-import { includes, without, reject, findIndex, sortBy } from "lodash"
+import { includes, without, reject, findIndex, sortBy, uniq } from "lodash"
 import { titleCase } from "change-case"
-import { FilledOrder, EDITABLE_FIELDS } from "../../models/filledOrder"
+import {
+  FilledOrder,
+  EDITABLE_FIELDS,
+  updateFilledOrder,
+  updateFilledOrders
+} from "../../models/filledOrder"
 
 import Text from "../common/text"
 import ColumnSettings from "./columnSettings"
+import Cell from "./cell"
 
 import {
   HeaderRow,
   TableHeader,
-  Cell,
   Container,
   Table,
   Span,
-  Row,
-  RowInput
+  Row
 } from "./components"
+
 import colors from "../../lib/colors"
+import { toArray } from "../../lib/helpers"
 
 export interface Sort {
   header: string
@@ -25,6 +31,7 @@ export interface Sort {
 
 interface Props {
   filledOrders: FilledOrder[]
+  setError: (error?: string) => void
 }
 
 interface State {
@@ -35,14 +42,7 @@ interface State {
   isEditing: string
   holdingShift: boolean
   selectedRows: number[]
-}
-
-const sortRows = (filledOrders: FilledOrder[], sort: Sort): FilledOrder[] => {
-  filledOrders = sortBy(filledOrders, sort.header)
-  if (!sort.ascending) {
-    filledOrders = filledOrders.reverse()
-  }
-  return filledOrders
+  filledOrders: FilledOrder[]
 }
 
 class TableComponent extends React.Component<Props, State> {
@@ -54,7 +54,8 @@ class TableComponent extends React.Component<Props, State> {
       holdingShift: false,
       isEditing: "",
       selectedRows: [],
-      sort: { header: "id", ascending: true }
+      sort: { header: "id", ascending: true },
+      filledOrders: []
     }
 
     this.handleKeyDown = this.handleKeyDown.bind(this)
@@ -91,13 +92,17 @@ class TableComponent extends React.Component<Props, State> {
   public setHeaders(filledOrders: FilledOrder[]) {
     if (filledOrders.length) {
       const headers = Object.keys(filledOrders[0])
-      this.setState({ headers })
+      this.setState({ headers, filledOrders })
     }
   }
 
   public sortBy(header: string, ascending: boolean) {
     const sort = { header, ascending }
-    this.setState({ sort })
+    let filledOrders = sortBy(this.state.filledOrders, sort.header)
+    if (!sort.ascending) {
+      filledOrders = filledOrders.reverse()
+    }
+    this.setState({ sort, filledOrders })
   }
 
   public hide(header: string) {
@@ -128,8 +133,36 @@ class TableComponent extends React.Component<Props, State> {
     this.setState({ selectedRows })
   }
 
+  public async updated(rowIdx: number, header: string, newValue: string) {
+    this.setState({ isEditing: "" })
+
+    const { selectedRows, filledOrders } = this.state
+    const ids = uniq(selectedRows.concat(rowIdx)).map(
+      idx => filledOrders[idx].external_trade_id
+    )
+
+    const result =
+      ids.length === 1
+        ? await updateFilledOrder(ids[0], header, newValue)
+        : await updateFilledOrders(ids, header, newValue)
+
+    if (result instanceof Error) {
+      this.props.setError(result.message)
+    } else {
+      this.props.setError(undefined)
+      toArray(result).forEach((updated: FilledOrder) => {
+        const idx = findIndex(
+          filledOrders,
+          f => f.external_trade_id === updated.external_trade_id
+        )
+        filledOrders[idx] = updated
+      })
+      this.setState({ filledOrders })
+    }
+  }
+
   public render() {
-    const { filledOrders } = this.props
+    const { filledOrders } = this.state
 
     const {
       headers,
@@ -166,30 +199,23 @@ class TableComponent extends React.Component<Props, State> {
       )
     }
 
-    const cell = (header: string, rowIdx: number, value: any) => {
-      const isEditable = includes(EDITABLE_FIELDS, header)
-      const key = `${header}-${rowIdx}`
-      return (
-        <Cell
-          holdingShift={holdingShift}
-          onClick={() => {
-            if (holdingShift) {
-              this.selectedRow(rowIdx)
-            } else if (isEditable) {
-              this.setState({ isEditing: key })
-            }
-          }}
-          editable={isEditable}
-          key={key}
-        >
-          {isEditing === key ? <RowInput autoFocus={true} /> : value}
-        </Cell>
-      )
-    }
-
     const row = (data: FilledOrder, i: number) => (
       <Row selected={includes(selectedRows, i)} key={i}>
-        {visibleHeaders.map((k: string) => cell(k, i, data[k]))}
+        {visibleHeaders.map((k: string) => (
+          <Cell
+            key={`${k}-${i}`}
+            rowIdx={i}
+            value={data[k]}
+            isEditable={includes(EDITABLE_FIELDS, k)}
+            isEditing={isEditing}
+            header={k}
+            holdingShift={holdingShift}
+            editRow={key => this.setState({ isEditing: key })}
+            selectedRow={this.selectedRow.bind(this)}
+            updated={this.updated.bind(this)}
+            unselectAllRows={() => this.setState({ selectedRows: [] })}
+          />
+        ))}
       </Row>
     )
 
@@ -207,7 +233,7 @@ class TableComponent extends React.Component<Props, State> {
         <Table>
           <tbody>
             <HeaderRow>{visibleHeaders.map(headerCell)}</HeaderRow>
-            {sortRows(filledOrders, sort).map(row)}
+            {filledOrders.map(row)}
           </tbody>
         </Table>
       </Container>

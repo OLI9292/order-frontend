@@ -35,6 +35,7 @@ interface CellProps {
 }
 
 export const Cell = styled.td`
+  white-space: nowrap;
   padding: 0px 10px;
   cursor: ${(p: CellProps) =>
     p.holdingShift ? "pointer" : p.editable && "text"};
@@ -99,4 +100,9 @@ export const RowInput = styled.input`
   font-size: 14px;
   padding: 0;
   font-weight: 300px;
+`
+
+export const Form = styled.form`
+  width: 100%;
+  height: 100%;
 `

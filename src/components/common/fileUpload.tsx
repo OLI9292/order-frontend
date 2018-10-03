@@ -2,7 +2,7 @@ import * as React from "react"
 
 import Dropzone from "react-dropzone"
 
-import { uploadFilledOrders } from "../../models/filledOrder"
+import { FilledOrder, uploadFilledOrders } from "../../models/filledOrder"
 import colors from "../../lib/colors"
 
 const style = {
@@ -18,17 +18,29 @@ const style = {
   "box-sizing": "border-box"
 }
 
-class FileUpload extends React.Component<any, any> {
-  constructor(props: any) {
+interface Props {
+  uploadedFilledOrders: (filledOrders: FilledOrder[]) => void
+  setError: (error?: string) => void
+}
+
+class FileUpload extends React.Component<Props, any> {
+  constructor(props: Props) {
     super(props)
-    this.state = {}
   }
 
   public async onDrop(acceptedFiles: File[], rejectedFiles: File[]) {
     const file = acceptedFiles[0]
     if (file) {
-      const result = await uploadFilledOrders(file)
+      const fd = new FormData()
+      fd.append("file", file)
+      const result = await uploadFilledOrders(fd)
       console.log(result)
+      if (result instanceof Error) {
+        console.log(result.message)
+        this.props.setError(result.message)
+      } else {
+        this.props.uploadedFilledOrders(result)
+      }
     }
   }
 
