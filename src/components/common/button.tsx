@@ -3,13 +3,16 @@ import colors from "../../lib/colors"
 
 interface Props {
   margin?: string
+  white?: boolean
 }
 
 const M = styled.p`
   width: 110px;
   height: 35px;
-  color: white;
-  background-color: ${colors.blue};
+  background-color: ${(p: Props) => (p.white ? "white" : colors.blue)};
+  color: ${(p: Props) => (p.white ? colors.darkGrey : "white")};
+  border: ${(p: Props) => `1px solid ${p.white ? colors.grey : colors.blue}`};
+  box-sizing: border-box;
   line-height: 35px;
   text-align: center;
   font-family: Source Sans Pro;

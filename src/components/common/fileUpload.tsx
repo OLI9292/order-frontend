@@ -12,10 +12,8 @@ const style = {
   color: colors.darkGrey,
   borderRadius: "5px",
   lineHeight: "35px",
-  "text-align": "center",
   fontFamily: "Source Sans Pro",
-  cursor: "pointer",
-  "box-sizing": "border-box"
+  cursor: "pointer"
 }
 
 interface Props {
@@ -44,7 +42,12 @@ class FileUpload extends React.Component<Props, any> {
 
   public render() {
     return (
-      <Dropzone style={style} accept={".csv"} onDrop={this.onDrop.bind(this)}>
+      <Dropzone
+        className="dropzone"
+        style={style}
+        accept={".csv"}
+        onDrop={this.onDrop.bind(this)}
+      >
         Upload File
       </Dropzone>
     )

@@ -1,6 +1,6 @@
 import CONFIG from "../lib/config"
 
-import { query } from "./query"
+import { query, rows } from "./query"
 
 export enum JournalType {
   bunched,
@@ -9,8 +9,8 @@ export enum JournalType {
 }
 
 export enum BuySell {
-  B,
-  S
+  B = "Buy",
+  S = "Sell"
 }
 
 export const EDITABLE_FIELDS = [
@@ -47,10 +47,8 @@ export interface FilledOrder {
 const fields =
   "id journal_type external_order_id bunched_order_id account_trade_id strategy_trade_id external_trade_id bunched_trade_id trade_date executing_account_id buy_sell quantity external_symbol price commissions exchange_id trader_id strategy_id client_id clearing_account_id settlement_date assigned"
 
-export const fetchFilledOrders = async (): Promise<FilledOrder[] | Error> => {
-  const gqlQuery = `query { filledOrder { ${fields} } }`
-  return query(gqlQuery, "filledOrder")
-}
+export const fetchFilledOrders = async (): Promise<FilledOrder[] | Error> =>
+  rows("filled_order", "FilledOrder", fields)
 
 export const updateFilledOrder = async (
   id: string,
