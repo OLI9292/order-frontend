@@ -6,3 +6,8 @@ body {
   width: 100%;
   font-family: sans-serif;
 }
+
+.dropzone {
+  text-align: center;
+  box-sizing: border-box;
+}

@@ -1,22 +1,25 @@
 import * as React from "react"
-import { includes, without, reject, findIndex, sortBy } from "lodash"
+import {
+  includes,
+  without,
+  reject,
+  findIndex,
+  sortBy,
+  intersection,
+  uniq
+} from "lodash"
 import { titleCase } from "change-case"
-import { FilledOrder, EDITABLE_FIELDS } from "../../models/filledOrder"
 
 import Text from "../common/text"
 import ColumnSettings from "./columnSettings"
+import RowComponent from "./row"
 
-import {
-  HeaderRow,
-  TableHeader,
-  Cell,
-  Container,
-  Table,
-  Span,
-  Row,
-  RowInput
-} from "./components"
+import DragScroll from "react-dragscroll"
+
+import { HeaderRow, TableHeader, Container, Table, Span } from "./components"
+
 import colors from "../../lib/colors"
+import FlexedDiv from "../common/flexedDiv"
 
 export interface Sort {
   header: string
@@ -24,7 +27,9 @@ export interface Sort {
 }
 
 interface Props {
-  filledOrders: FilledOrder[]
+  data: any[]
+  editableFields: string[]
+  updated?: (ids: string[], header: string, newValue: string) => void
 }
 
 interface State {
@@ -35,14 +40,7 @@ interface State {
   isEditing: string
   holdingShift: boolean
   selectedRows: number[]
-}
-
-const sortRows = (filledOrders: FilledOrder[], sort: Sort): FilledOrder[] => {
-  filledOrders = sortBy(filledOrders, sort.header)
-  if (!sort.ascending) {
-    filledOrders = filledOrders.reverse()
-  }
-  return filledOrders
+  data: any[]
 }
 
 class TableComponent extends React.Component<Props, State> {
@@ -50,11 +48,23 @@ class TableComponent extends React.Component<Props, State> {
     super(props)
 
     this.state = {
-      hidden: [],
+      hidden: [
+        "external_order_id",
+        "bunched_order_id",
+        "account_trade_id",
+        "strategy_trade_id",
+        "bunched_trade_id",
+        "executing_account_id",
+        "commissions",
+        "trader_id",
+        "clearing_account_id",
+        "settlement_date"
+      ],
       holdingShift: false,
       isEditing: "",
       selectedRows: [],
-      sort: { header: "id", ascending: true }
+      sort: { header: "id", ascending: true },
+      data: []
     }
 
     this.handleKeyDown = this.handleKeyDown.bind(this)
@@ -62,9 +72,13 @@ class TableComponent extends React.Component<Props, State> {
   }
 
   public componentDidMount() {
-    this.setHeaders(this.props.filledOrders)
+    this.setHeaders(this.props.data)
     document.addEventListener("keydown", this.handleKeyDown)
     document.addEventListener("keyup", this.handleKeyUp)
+  }
+
+  public componentWillReceiveProps(nextProps: Props) {
+    this.setHeaders(nextProps.data)
   }
 
   public componentWillUnmount() {
@@ -84,20 +98,22 @@ class TableComponent extends React.Component<Props, State> {
     }
   }
 
-  public componentWillReceiveProps(nextProps: Props) {
-    this.setHeaders(nextProps.filledOrders)
-  }
-
-  public setHeaders(filledOrders: FilledOrder[]) {
-    if (filledOrders.length) {
-      const headers = Object.keys(filledOrders[0])
-      this.setState({ headers })
+  public setHeaders(data: any[]) {
+    const state: any = {}
+    state.data = data
+    if (data.length) {
+      state.headers = Object.keys(data[0])
     }
+    this.setState(state)
   }
 
   public sortBy(header: string, ascending: boolean) {
     const sort = { header, ascending }
-    this.setState({ sort })
+    let data = sortBy(this.state.data, sort.header)
+    if (!sort.ascending) {
+      data = data.reverse()
+    }
+    this.setState({ sort, data })
   }
 
   public hide(header: string) {
@@ -120,30 +136,37 @@ class TableComponent extends React.Component<Props, State> {
     }
   }
 
-  public selectedRow(i: number) {
-    let { selectedRows } = this.state
-    selectedRows = includes(selectedRows, i)
-      ? without(selectedRows, i)
-      : selectedRows.concat(i)
-    this.setState({ selectedRows })
+  public selectedRow(i: number, selected: boolean) {
+    this.setState({
+      selectedRows: selected
+        ? this.state.selectedRows.concat(i)
+        : without(this.state.selectedRows, i)
+    })
+  }
+
+  public updated(rowIdx: number, header: string, newValue: string) {
+    const { selectedRows, data } = this.state
+    const ids = uniq(selectedRows.concat(rowIdx).map(idx => data[idx].id))
+    if (this.props.updated) {
+      this.props.updated(ids, header, newValue)
+    }
   }
 
   public render() {
-    const { filledOrders } = this.props
-
     const {
       headers,
-      hidden,
       isMoving,
       sort,
       isEditing,
       holdingShift,
-      selectedRows
+      data
     } = this.state
 
     if (!headers) {
       return null
     }
+
+    const hidden = intersection(this.state.hidden, headers)
 
     const visibleHeaders = reject(headers, h => includes(hidden, h))
 
@@ -166,50 +189,41 @@ class TableComponent extends React.Component<Props, State> {
       )
     }
 
-    const cell = (header: string, rowIdx: number, value: any) => {
-      const isEditable = includes(EDITABLE_FIELDS, header)
-      const key = `${header}-${rowIdx}`
-      return (
-        <Cell
-          holdingShift={holdingShift}
-          onClick={() => {
-            if (holdingShift) {
-              this.selectedRow(rowIdx)
-            } else if (isEditable) {
-              this.setState({ isEditing: key })
-            }
-          }}
-          editable={isEditable}
-          key={key}
-        >
-          {isEditing === key ? <RowInput autoFocus={true} /> : value}
-        </Cell>
-      )
-    }
-
-    const row = (data: FilledOrder, i: number) => (
-      <Row selected={includes(selectedRows, i)} key={i}>
-        {visibleHeaders.map((k: string) => cell(k, i, data[k]))}
-      </Row>
-    )
-
     return (
       <Container>
-        <Text.s hide={hidden.length === 0} color={colors.darkGrey}>
-          Show:{" "}
-          {hidden.map(h => (
-            <Span key={h} onClick={() => this.hide(h)}>
-              {titleCase(h)}
-            </Span>
-          ))}
-        </Text.s>
+        <FlexedDiv justifyContent="space-between">
+          <Text.s hide={hidden.length === 0} color={colors.darkGrey}>
+            Show:{" "}
+            {hidden.map(h => (
+              <Span key={h} onClick={() => this.hide(h)}>
+                {titleCase(h)}
+              </Span>
+            ))}
+          </Text.s>
+        </FlexedDiv>
 
-        <Table>
-          <tbody>
-            <HeaderRow>{visibleHeaders.map(headerCell)}</HeaderRow>
-            {sortRows(filledOrders, sort).map(row)}
-          </tbody>
-        </Table>
+        <DragScroll height={"60vh"} width={"100%"}>
+          <Table>
+            <tbody>
+              <HeaderRow>{visibleHeaders.map(headerCell)}</HeaderRow>
+              {data.map((d, i) => (
+                <RowComponent
+                  key={i}
+                  visibleHeaders={visibleHeaders}
+                  rowIdx={i}
+                  data={d}
+                  editableFields={this.props.editableFields}
+                  isEditing={isEditing}
+                  editRow={key => this.setState({ isEditing: key })}
+                  holdingShift={holdingShift}
+                  selectedRow={this.selectedRow.bind(this)}
+                  unselectAllRows={() => this.setState({ selectedRows: [] })}
+                  updated={this.updated.bind(this)}
+                />
+              ))}
+            </tbody>
+          </Table>
+        </DragScroll>
       </Container>
     )
   }
