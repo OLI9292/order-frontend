@@ -13,4 +13,4 @@ export interface AccountTrade {
 const fields = "id client buy_sell quantity price external_symbol"
 
 export const fetchAccountTrades = async (): Promise<AccountTrade[] | Error> =>
-  rows("account_trade", "AccountTrade", fields)
+  rows("account_trade", "AccountTrade", "", "", fields)

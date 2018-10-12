@@ -5,14 +5,22 @@ const GQL_URL = CONFIG.API_URL + "/graphql"
 export const rows = async (
   tablename: string,
   typename: string,
+  startDate: string,
+  endDate: string,
   fields: string
 ): Promise<any[] | Error> => {
-  const gqlQuery = `query { rows(tablename: "${tablename}", typename: "${typename}") { ... on ${typename} { ${fields} } } }`
+  const gqlQuery = `query { rows
+    (tablename: "${tablename}", typename: "${typename}", startDate: "${startDate}", endDate: "${endDate}")
+    { ... on ${typename} { ${fields} } }
+  }`
   return query(gqlQuery, "rows")
 }
 
-export const query = (gqlQuery: string, name: string): any | Error =>
-  fetch(GQL_URL, {
+export const query = (gqlQuery: string, name: string): any | Error => {
+  if (process.env.NODE_ENV === "development") {
+    console.log(gqlQuery)
+  }
+  return fetch(GQL_URL, {
     body: JSON.stringify({ query: gqlQuery }),
     headers: { "Content-Type": "application/json" },
     method: "POST"
@@ -29,3 +37,4 @@ export const query = (gqlQuery: string, name: string): any | Error =>
       }
       return json.data[name]
     })
+}

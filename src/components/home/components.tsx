@@ -1,5 +1,13 @@
 import styled from "styled-components"
 
 export const Container = styled.div`
-  margin: 0px 20px 50px 20px;
+  padding: 0 20px
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+`
+
+export const UpperContainer = styled.div`
+  height: 25vh;
 `

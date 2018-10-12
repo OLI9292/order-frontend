@@ -1,14 +1,18 @@
 import * as React from "react"
 
 import { fetchAccountTrades, AccountTrade } from "../../models/accountTrade"
-import Table from "../table2"
+import Table from "../table"
 
 interface State {
   accountTrades: AccountTrade[]
 }
 
-class TableComponent extends React.Component<any, State> {
-  constructor(props: any) {
+interface Props {
+  setError: (error?: string) => void
+}
+
+class AccountTrades extends React.Component<Props, State> {
+  constructor(props: Props) {
     super(props)
 
     this.state = {
@@ -18,11 +22,9 @@ class TableComponent extends React.Component<any, State> {
 
   public async componentDidMount() {
     const accountTrades = await fetchAccountTrades()
-    if (!(accountTrades instanceof Error)) {
-      this.setState({ accountTrades })
-    } else {
-      console.log(accountTrades.message)
-    }
+    accountTrades instanceof Error
+      ? this.props.setError(accountTrades.message)
+      : this.setState({ accountTrades })
   }
 
   public render() {
@@ -31,4 +33,4 @@ class TableComponent extends React.Component<any, State> {
   }
 }
 
-export default TableComponent
+export default AccountTrades

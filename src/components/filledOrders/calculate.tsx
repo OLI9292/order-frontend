@@ -1,7 +1,6 @@
 import { sum, extend, find } from "lodash"
 
 import { Model, OrdersForAllocation } from "./allocateModal"
-import { FilledOrder } from "../../models/filledOrder"
 
 export interface Allocation {
   client: string
@@ -13,12 +12,30 @@ export interface Allocation {
 }
 
 const calculate = (
-  model: Model,
   clients: string[],
   selectedClients: string[],
   quantityObj: any,
-  ordersForAllocation: OrdersForAllocation
+  ordersForAllocation: OrdersForAllocation,
+  model?: Model
 ): Allocation[] | undefined => {
+  const averagePrice =
+    sum(ordersForAllocation.filledOrders.map(f => f.quantity * f.price)) /
+    ordersForAllocation.total
+
+  if (!model) {
+    const quantity = ordersForAllocation.total
+    return [
+      {
+        client: clients[0],
+        quantity,
+        filled: true,
+        partialQuanity: quantity,
+        price: averagePrice,
+        totalPrice: averagePrice * quantity
+      }
+    ]
+  }
+
   const allocations: any[] = selectedClients.map(client => ({
     client,
     quantity: parseFloat(quantityObj[client]),
@@ -34,14 +51,10 @@ const calculate = (
     return
   }
 
-  if (model === Model.Average) {
-    const price =
-      sum(
-        ordersForAllocation.filledOrders.map(
-          (f: FilledOrder) => f.quantity * f.price
-        )
-      ) / ordersForAllocation.total
-    return allocations.map(a => extend({}, a, { price, filled: true }))
+  if (model === Model.average) {
+    return allocations.map(a =>
+      extend({}, a, { price: averagePrice, filled: true })
+    )
   } else {
     let idx = 0
     let partialQuantity = 0

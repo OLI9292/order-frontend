@@ -1,5 +1,5 @@
 import * as React from "react"
-import { without, values, sum } from "lodash"
+import { without, values, sum, pick } from "lodash"
 
 import { Modal, DimOverlay, ModalError } from "../common/modal"
 import Header from "../common/header"
@@ -23,6 +23,7 @@ interface Props {
   clients: string[]
   closeModal: () => void
   ordersForAllocation: OrdersForAllocation
+  allocate: (ids: string[], data: any) => void
 }
 
 interface State {
@@ -35,8 +36,8 @@ interface State {
 }
 
 export enum Model {
-  Sequential,
-  Average
+  sequential = "sequential",
+  average = "average"
 }
 
 class AllocateModal extends React.Component<Props, State> {
@@ -70,10 +71,9 @@ class AllocateModal extends React.Component<Props, State> {
         delete quantities[c]
       }
     })
-
     const allocations =
-      model !== undefined &&
-      calulate(model, clients, selectedClients, quantities, ordersForAllocation)
+      (model !== undefined || selectedClients.length === 1) &&
+      calulate(clients, selectedClients, quantities, ordersForAllocation, model)
 
     if (allocations) {
       const summary = allocations.map(
@@ -90,7 +90,13 @@ class AllocateModal extends React.Component<Props, State> {
 
   public allocate() {
     const { selectedClients, model, allocations } = this.state
-    const { total } = this.props.ordersForAllocation
+    const {
+      total,
+      instrument,
+      direction,
+      filledOrders
+    } = this.props.ordersForAllocation
+
     const quantities = allocations ? allocations.map(a => a.quantity) : []
 
     let error
@@ -109,9 +115,18 @@ class AllocateModal extends React.Component<Props, State> {
 
     if (error) {
       this.setState({ error })
-    } else {
-      console.log("allocate!")
-      console.log(allocations)
+    } else if (allocations) {
+      const ids = filledOrders.map(f => f.id)
+      const data = {
+        quantity: sum(quantities),
+        allocation_type: model || "single client",
+        external_symbol: instrument,
+        buy_sell: direction,
+        allocations: allocations.map(a =>
+          pick(a, ["price", "quantity", "client"])
+        )
+      }
+      this.props.allocate(ids, data)
     }
   }
 
@@ -173,14 +188,14 @@ class AllocateModal extends React.Component<Props, State> {
         <Text.m margin="0 15px 0 0">Model :</Text.m>
         <input
           type="checkbox"
-          checked={model === Model.Average}
-          onClick={() => this.editedModel(Model.Average)}
+          checked={model === Model.average}
+          onClick={() => this.editedModel(Model.average)}
         />
         <Text.s margin="0 15px 0 4px">Average</Text.s>
         <input
           type="checkbox"
-          checked={model === Model.Sequential}
-          onClick={() => this.editedModel(Model.Sequential)}
+          checked={model === Model.sequential}
+          onClick={() => this.editedModel(Model.sequential)}
         />
         <Text.s margin="0 0 0 4px">Sequential</Text.s>
       </FlexedDiv>

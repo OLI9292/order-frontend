@@ -1,13 +1,17 @@
 import styled from "styled-components"
 
 import colors from "../../lib/colors"
-
-import Button from "../common/button"
 import FlexedDiv from "../common/flexedDiv"
 
 export const Container = styled.div`
   width: 100%;
-  overflow-x: scroll;
+`
+
+export const TableContainer = styled.div`
+  overflow: auto;
+  width: 100%;
+  height: 60vh;
+  margin: 0 auto;
 `
 
 export const Table = styled.table`
@@ -107,20 +111,4 @@ export const RowInput = styled.input`
 export const Form = styled.form`
   width: 100%;
   height: 100%;
-`
-
-export const Divider = styled.div`
-  height: 1px;
-  width: 100%;
-  margin: 0 auto;
-  margin-top: 20px;
-  margin-bottom: 20px;
-  background-color: ${colors.grey};
-`
-
-export const AllocateButton = Button.m.extend`
-  position: absolute;
-  bottom: 20px;
-  left: 200px;
-  margin-left: -55px;
 `
