@@ -11,10 +11,10 @@ interface Props {
   isEditing: string
   holdingShift: boolean
   editableFields: string[]
-  unselectAllRows: () => void
-  selectedRow: (i: number, selected: boolean) => void
   editRow: (key: string) => void
   updated?: (rowIdx: number, header: string, newValue: string) => void
+  deselectCount: number
+  deselect: () => void
 }
 
 interface State {
@@ -38,6 +38,15 @@ class RowComponent extends React.Component<Props, State> {
     this.state = {
       newValue: "",
       isSelected: false
+    }
+  }
+
+  public componentWillReceiveProps(nextProps: Props) {
+    if (
+      this.props.deselectCount < nextProps.deselectCount &&
+      this.state.isSelected
+    ) {
+      this.setState({ isSelected: false })
     }
   }
 
@@ -71,21 +80,24 @@ class RowComponent extends React.Component<Props, State> {
       </Form>
     )
 
+    if (isSelected) {
+      console.log(isSelected)
+    }
+
     return (
-      <Row selected={isSelected}>
+      <Row
+        className={`row${isSelected ? " selected" : ""}`}
+        selected={isSelected}
+      >
         {visibleHeaders.map((k: string) => (
           <Cell
-            key={k}
+            key={`${k}-${rowIdx}`}
             holdingShift={holdingShift}
-            onClick={() => {
-              if (holdingShift) {
-                this.setState({ isSelected: !isSelected }, () =>
-                  this.props.selectedRow(rowIdx, !isSelected)
-                )
-              } else if (includes(editableFields, k)) {
+            onClick={e => {
+              if (includes(editableFields, k)) {
                 this.props.editRow(`${rowIdx}-${k}`)
               } else {
-                this.props.unselectAllRows()
+                this.setState({ isSelected: !isSelected })
               }
             }}
             editable={includes(editableFields, k)}

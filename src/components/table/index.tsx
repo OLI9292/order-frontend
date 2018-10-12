@@ -39,8 +39,8 @@ interface State {
   headers?: string[]
   isEditing: string
   holdingShift: boolean
-  selectedRows: number[]
   data: any[]
+  deselectCount: number
 }
 
 class TableComponent extends React.Component<Props, State> {
@@ -62,40 +62,18 @@ class TableComponent extends React.Component<Props, State> {
       ],
       holdingShift: false,
       isEditing: "",
-      selectedRows: [],
       sort: { header: "id", ascending: true },
-      data: []
+      data: [],
+      deselectCount: 0
     }
-
-    this.handleKeyDown = this.handleKeyDown.bind(this)
-    this.handleKeyUp = this.handleKeyUp.bind(this)
   }
 
   public componentDidMount() {
     this.setHeaders(this.props.data)
-    document.addEventListener("keydown", this.handleKeyDown)
-    document.addEventListener("keyup", this.handleKeyUp)
   }
 
   public componentWillReceiveProps(nextProps: Props) {
     this.setHeaders(nextProps.data)
-  }
-
-  public componentWillUnmount() {
-    document.removeEventListener("keydown", this.handleKeyDown)
-    document.removeEventListener("keyup", this.handleKeyUp)
-  }
-
-  public handleKeyDown(e: any) {
-    if (e.key === "Shift") {
-      this.setState({ holdingShift: true })
-    }
-  }
-
-  public handleKeyUp(e: any) {
-    if (e.key === "Shift") {
-      this.setState({ holdingShift: false })
-    }
   }
 
   public setHeaders(data: any[]) {
@@ -136,20 +114,20 @@ class TableComponent extends React.Component<Props, State> {
     }
   }
 
-  public selectedRow(i: number, selected: boolean) {
-    this.setState({
-      selectedRows: selected
-        ? this.state.selectedRows.concat(i)
-        : without(this.state.selectedRows, i)
-    })
-  }
-
   public updated(rowIdx: number, header: string, newValue: string) {
-    const { selectedRows, data } = this.state
+    const { data } = this.state
+    const selectedRows = Array.from(document.getElementsByClassName("row"))
+      .map((r, i) => (r.classList.contains("selected") ? i : -1))
+      .filter(i => i !== -1)
     const ids = uniq(selectedRows.concat(rowIdx).map(idx => data[idx].id))
     if (this.props.updated) {
       this.props.updated(ids, header, newValue)
+      this.deselect()
     }
+  }
+
+  public deselect() {
+    this.setState({ deselectCount: this.state.deselectCount + 1 })
   }
 
   public render() {
@@ -159,7 +137,8 @@ class TableComponent extends React.Component<Props, State> {
       sort,
       isEditing,
       holdingShift,
-      data
+      data,
+      deselectCount
     } = this.state
 
     if (!headers) {
@@ -208,6 +187,8 @@ class TableComponent extends React.Component<Props, State> {
               <HeaderRow>{visibleHeaders.map(headerCell)}</HeaderRow>
               {data.map((d, i) => (
                 <RowComponent
+                  deselectCount={deselectCount}
+                  deselect={this.deselect.bind(this)}
                   key={i}
                   visibleHeaders={visibleHeaders}
                   rowIdx={i}
@@ -216,8 +197,6 @@ class TableComponent extends React.Component<Props, State> {
                   isEditing={isEditing}
                   editRow={key => this.setState({ isEditing: key })}
                   holdingShift={holdingShift}
-                  selectedRow={this.selectedRow.bind(this)}
-                  unselectAllRows={() => this.setState({ selectedRows: [] })}
                   updated={this.updated.bind(this)}
                 />
               ))}

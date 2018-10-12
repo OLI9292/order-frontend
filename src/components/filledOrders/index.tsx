@@ -24,7 +24,6 @@ import { updateObjects, toArray } from "../../lib/helpers"
 
 interface State {
   filledOrders: FilledOrder[]
-  selectedRows: number[]
   ordersForAllocation?: OrdersForAllocation
 }
 
@@ -40,8 +39,7 @@ class FilledOrders extends React.Component<Props, State> {
     super(props)
 
     this.state = {
-      filledOrders: [],
-      selectedRows: []
+      filledOrders: []
     }
   }
 
@@ -73,7 +71,9 @@ class FilledOrders extends React.Component<Props, State> {
 
   public clickedAllocate() {
     const { filledOrders } = this.state
-    const selectedRows = this.table.current!.state.selectedRows
+    const selectedRows = Array.from(document.getElementsByClassName("row"))
+      .map((r, i) => (r.classList.contains("selected") ? i : -1))
+      .filter(i => i !== -1)
     const orders = filledOrders.filter((o, i) => includes(selectedRows, i))
     const direction = uniq(orders.map(f => f.buy_sell))
     const instrument = uniq(orders.map(f => f.external_symbol))
