@@ -1,8 +1,9 @@
 import * as React from "react"
-import * as moment from "moment"
 
 import { isBoolean, includes } from "lodash"
 import { Cell, Row, RowInput, Form } from "./components"
+
+import { parseDateString } from "../../lib/helpers"
 
 interface Props {
   visibleHeaders: string[]
@@ -14,7 +15,7 @@ interface Props {
   editRow: (key: string) => void
   updated?: (rowIdx: number, header: string, newValue: string) => void
   deselectCount: number
-  deselect: () => void
+  selectedRow: (rowIdx: number) => void
 }
 
 interface State {
@@ -26,8 +27,7 @@ const parsedValue = (v: any, header: string): string => {
   if (isBoolean(v)) {
     return String(v)
   } else if (header === "trade_date") {
-    const t = moment(v, "x")
-    return t.isValid() ? t.format("M/D/YY H:mm") : v
+    return parseDateString(v)
   }
   return v
 }
@@ -80,10 +80,6 @@ class RowComponent extends React.Component<Props, State> {
       </Form>
     )
 
-    if (isSelected) {
-      console.log(isSelected)
-    }
-
     return (
       <Row
         className={`row${isSelected ? " selected" : ""}`}
@@ -97,7 +93,9 @@ class RowComponent extends React.Component<Props, State> {
               if (includes(editableFields, k)) {
                 this.props.editRow(`${rowIdx}-${k}`)
               } else {
-                this.setState({ isSelected: !isSelected })
+                this.setState({ isSelected: !isSelected }, () =>
+                  this.props.selectedRow(rowIdx)
+                )
               }
             }}
             editable={includes(editableFields, k)}

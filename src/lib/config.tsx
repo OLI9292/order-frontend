@@ -1,3 +1,6 @@
+import * as dotenv from "dotenv"
+dotenv.config()
+
 export default {
-  API_URL: "https://order-backend.herokuapp.com" || "http://localhost:4000"
+  API_URL: process.env.API_URL || "http://localhost:4000"
 }

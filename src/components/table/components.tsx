@@ -5,6 +5,7 @@ import FlexedDiv from "../common/flexedDiv"
 
 export const Container = styled.div`
   width: 100%;
+  position: relative;
 `
 
 export const TableContainer = styled.div`
@@ -111,4 +112,15 @@ export const RowInput = styled.input`
 export const Form = styled.form`
   width: 100%;
   height: 100%;
+`
+
+export const RowCountBox = styled.div`
+  position: absolute;
+  right: 0;
+  text-align: right;
+`
+
+export const DeselectSpan = styled.span`
+  cursor: pointer;
+  color: ${colors.red};
 `

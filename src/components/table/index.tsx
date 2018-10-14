@@ -16,7 +16,15 @@ import RowComponent from "./row"
 
 import DragScroll from "react-dragscroll"
 
-import { HeaderRow, TableHeader, Container, Table, Span } from "./components"
+import {
+  HeaderRow,
+  TableHeader,
+  Container,
+  Table,
+  Span,
+  RowCountBox,
+  DeselectSpan
+} from "./components"
 
 import colors from "../../lib/colors"
 import FlexedDiv from "../common/flexedDiv"
@@ -41,6 +49,7 @@ interface State {
   holdingShift: boolean
   data: any[]
   deselectCount: number
+  selected: number[]
 }
 
 class TableComponent extends React.Component<Props, State> {
@@ -64,7 +73,8 @@ class TableComponent extends React.Component<Props, State> {
       isEditing: "",
       sort: { header: "id", ascending: true },
       data: [],
-      deselectCount: 0
+      deselectCount: 0,
+      selected: []
     }
   }
 
@@ -115,19 +125,23 @@ class TableComponent extends React.Component<Props, State> {
   }
 
   public updated(rowIdx: number, header: string, newValue: string) {
-    const { data } = this.state
-    const selectedRows = Array.from(document.getElementsByClassName("row"))
-      .map((r, i) => (r.classList.contains("selected") ? i : -1))
-      .filter(i => i !== -1)
-    const ids = uniq(selectedRows.concat(rowIdx).map(idx => data[idx].id))
+    const { data, selected } = this.state
+    const ids = uniq(selected.concat(rowIdx).map(idx => data[idx].id))
     if (this.props.updated) {
       this.props.updated(ids, header, newValue)
       this.deselect()
     }
   }
+  public selectedRow(rowIdx: number) {
+    let { selected } = this.state
+    selected = includes(selected, rowIdx)
+      ? without(selected, rowIdx)
+      : selected.concat(rowIdx)
+    this.setState({ selected })
+  }
 
   public deselect() {
-    this.setState({ deselectCount: this.state.deselectCount + 1 })
+    this.setState({ selected: [], deselectCount: this.state.deselectCount + 1 })
   }
 
   public render() {
@@ -138,7 +152,8 @@ class TableComponent extends React.Component<Props, State> {
       isEditing,
       holdingShift,
       data,
-      deselectCount
+      deselectCount,
+      selected
     } = this.state
 
     if (!headers) {
@@ -188,7 +203,6 @@ class TableComponent extends React.Component<Props, State> {
               {data.map((d, i) => (
                 <RowComponent
                   deselectCount={deselectCount}
-                  deselect={this.deselect.bind(this)}
                   key={i}
                   visibleHeaders={visibleHeaders}
                   rowIdx={i}
@@ -198,11 +212,25 @@ class TableComponent extends React.Component<Props, State> {
                   editRow={key => this.setState({ isEditing: key })}
                   holdingShift={holdingShift}
                   updated={this.updated.bind(this)}
+                  selectedRow={this.selectedRow.bind(this)}
                 />
               ))}
             </tbody>
           </Table>
         </DragScroll>
+
+        {selected.length > 0 && (
+          <RowCountBox>
+            <Text.s color={colors.darkGrey}>
+              {selected.length} row
+              {selected.length > 1 ? "s" : ""} selected ({" "}
+              <DeselectSpan onClick={this.deselect.bind(this)}>
+                deselect
+              </DeselectSpan>{" "}
+              )
+            </Text.s>
+          </RowCountBox>
+        )}
       </Container>
     )
   }

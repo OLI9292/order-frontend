@@ -124,7 +124,13 @@ class Home extends React.Component<Props, State> {
             isOutsideRange={day => !isInclusivelyBeforeDay(day, moment())}
           />
 
-          <Text.s margin={"0"} height={"20px"} color={colors.red}>
+          <Text.s
+            margin={"0"}
+            lineHeight={"20px"}
+            textAlign="center"
+            height={"20px"}
+            color={colors.red}
+          >
             {this.state.error}
           </Text.s>
         </UpperContainer>

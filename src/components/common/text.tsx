@@ -6,6 +6,8 @@ interface Props {
   hide?: boolean
   margin?: string
   height?: string
+  lineHeight?: string
+  textAlign?: string
   clickable?: boolean
   display?: string
 }
@@ -17,6 +19,8 @@ const M = styled.p`
   margin: ${(p: Props) => p.margin};
   display: ${(p: Props) => p.display};
   height: ${(p: Props) => p.height};
+  line-height: ${(p: Props) => p.lineHeight};
+  text-align: ${(p: Props) => p.textAlign};
   cursor: ${(p: Props) => p.clickable && "pointer"};
   &:hover {
     color: ${(p: Props) => p.hoverColor};

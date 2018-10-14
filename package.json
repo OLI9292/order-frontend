@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@types/dotenv": "^4.0.3",
     "@types/lodash": "^4.14.112",
     "@types/moment": "^2.13.0",
     "@types/node": "^10.5.4",
@@ -15,6 +16,7 @@
     "@types/typescript": "^2.0.0",
     "@types/underscore": "^1.8.8",
     "change-case": "^3.0.2",
+    "dotenv": "^6.1.0",
     "history": "^4.7.2",
     "lodash": "^4.17.10",
     "moment": "^2.22.2",
