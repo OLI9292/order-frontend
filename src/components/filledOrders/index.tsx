@@ -58,9 +58,13 @@ class FilledOrders extends React.Component<Props, State> {
   public async loadData(dateRange: DateRange) {
     const [startDate, endDate] = dateRange
     const filledOrders = await fetchFilledOrders(startDate, endDate)
-    filledOrders instanceof Error
-      ? this.props.setError(filledOrders.message)
-      : this.setState({ filledOrders })
+    if (filledOrders instanceof Error) {
+      this.props.setError(filledOrders.message)
+    } else {
+      filledOrders.length === 0
+        ? this.props.setError("No data found for this date range.")
+        : this.setState({ filledOrders })
+    }
   }
 
   public uploadedFilledOrders(filledOrders: FilledOrder[]) {
@@ -70,10 +74,10 @@ class FilledOrders extends React.Component<Props, State> {
 
   public clickedAllocate() {
     const { filledOrders } = this.state
-    const selectedRows = Array.from(document.getElementsByClassName("row"))
-      .map((r, i) => (r.classList.contains("selected") ? i : -1))
-      .filter(i => i !== -1)
-    const orders = filledOrders.filter((o, i) => includes(selectedRows, i))
+    const selectedIds = Array.from(document.getElementsByClassName("row"))
+      .filter((r, i) => r.classList.contains("selected"))
+      .map(({ id }) => id)
+    const orders = filledOrders.filter(({ id }) => includes(selectedIds, id))
     const direction = uniq(orders.map(f => f.buy_sell))
     const instrument = uniq(orders.map(f => f.external_symbol))
     const total = sum(orders.map(f => parseFloat(String(f.quantity))))
@@ -105,7 +109,7 @@ class FilledOrders extends React.Component<Props, State> {
     let { filledOrders } = this.state
     const result = await allocateFilledOrders(ids, data)
     if (result instanceof Error) {
-      window.alert(result.message)
+      this.props.setError(result.message)
     } else {
       filledOrders = updateObjects(filledOrders, result.filledOrders)
       this.setState(
@@ -128,10 +132,7 @@ class FilledOrders extends React.Component<Props, State> {
     } else {
       this.props.setError(undefined)
       toArray(result).forEach((updated: FilledOrder) => {
-        const idx = findIndex(
-          filledOrders,
-          f => f.external_trade_id === updated.external_trade_id
-        )
+        const idx = findIndex(filledOrders, ({ id }) => id === updated.id)
         filledOrders[idx] = updated
       })
       this.setState({ filledOrders })

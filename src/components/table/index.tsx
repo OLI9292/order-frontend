@@ -6,8 +6,8 @@ import {
   findIndex,
   sortBy,
   intersection,
-  uniq,
   without,
+  uniq,
   isEmpty
 } from "lodash"
 import { titleCase } from "change-case"
@@ -33,6 +33,7 @@ import {
 } from "./components"
 
 import colors from "../../lib/colors"
+import { selectedIds } from "../../lib/helpers"
 import FlexedDiv from "../common/flexedDiv"
 
 export interface Sort {
@@ -51,7 +52,7 @@ interface State {
   sort: Sort
   isMoving?: number
   headers?: string[]
-  isEditing: string
+  isEditing?: string
   holdingShift: boolean
   data: any[]
   deselectCount: number
@@ -81,7 +82,6 @@ class TableComponent extends React.Component<Props, State> {
         "settlement_date"
       ],
       holdingShift: false,
-      isEditing: "",
       sort: { header: "id", ascending: true },
       data: [],
       deselectCount: 0,
@@ -137,9 +137,8 @@ class TableComponent extends React.Component<Props, State> {
     }
   }
 
-  public updated(rowIdx: number, header: string, newValue: string) {
-    const { data, selected } = this.state
-    const ids = uniq(selected.concat(rowIdx).map(idx => data[idx].id))
+  public updated(id: string, header: string, newValue: string) {
+    const ids = uniq(selectedIds().concat(id))
     if (this.props.updated) {
       this.props.updated(ids, header, newValue)
       this.deselect()

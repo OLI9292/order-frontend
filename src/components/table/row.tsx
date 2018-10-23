@@ -11,11 +11,11 @@ interface Props {
   visibleHeaders: string[]
   rowIdx: number
   data: any
-  isEditing: string
+  isEditing?: string
   holdingShift: boolean
   editableFields: string[]
-  editRow: (key: string) => void
-  updated?: (rowIdx: number, header: string, newValue: string) => void
+  editRow: (key?: string) => void
+  updated?: (id: string, header: string, newValue: string) => void
   deselectCount: number
   selectedAllCount: number
   selectedRow: (rowIdx: number) => void
@@ -88,7 +88,7 @@ class RowComponent extends React.Component<Props, State> {
         onSubmit={e => {
           e.preventDefault()
           if (updated) {
-            updated(rowIdx, header, newValue)
+            updated(data.id, header, newValue)
           }
         }}
       >
@@ -96,6 +96,7 @@ class RowComponent extends React.Component<Props, State> {
           onChange={e => this.setState({ newValue: e.target.value })}
           value={newValue}
           autoFocus={true}
+          onBlur={() => this.setState({ newValue: "" }, this.props.editRow)}
         />
       </CellForm>
     )
@@ -104,6 +105,7 @@ class RowComponent extends React.Component<Props, State> {
       <Row
         onMouseEnter={() => this.setState({ isHovering: true })}
         onMouseLeave={() => this.setState({ isHovering: false })}
+        id={data.id}
         className={`row${isSelected ? " selected" : ""}`}
         selected={isSelected}
       >

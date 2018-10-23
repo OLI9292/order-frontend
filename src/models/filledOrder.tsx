@@ -91,9 +91,11 @@ export const allocateFilledOrders = async (
     allocateFilledOrders(ids: "${ids.join(",")}", data: "${encoded}") {
       groupedTrade {
         id
+        created_at
       } 
       accountTrades {
         id
+        created_at
       }
       filledOrders {
         id

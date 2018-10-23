@@ -13,6 +13,8 @@ import {
   GroupedTrade
 } from "../../models/groupedTrade"
 
+import { selectedIds } from "../../lib/helpers"
+
 interface State {
   groupedTrades: GroupedTrade[]
 }
@@ -47,20 +49,22 @@ class GroupedTrades extends React.Component<Props, State> {
   public async loadData(dateRange: DateRange) {
     const [startDate, endDate] = dateRange
     const groupedTrades = await fetchGroupedTrades(startDate, endDate)
-    groupedTrades instanceof Error
-      ? this.props.setError(groupedTrades.message)
-      : this.setState({ groupedTrades })
+    if (groupedTrades instanceof Error) {
+      this.props.setError(groupedTrades.message)
+    } else {
+      groupedTrades.length === 0
+        ? this.props.setError("No data found for this date range.")
+        : this.setState({ groupedTrades })
+    }
   }
 
   public async undoAllocation() {
     const { groupedTrades } = this.state
-    const selectedRows = Array.from(document.getElementsByClassName("row"))
-      .map((r, i) => (r.classList.contains("selected") ? i : -1))
-      .filter(i => i !== -1)
-    if (selectedRows.length !== 1) {
+    const ids = selectedIds()
+    if (ids.length !== 1) {
       this.props.setError("Please highlight 1 grouped trade to undo.")
     } else {
-      const id = groupedTrades[selectedRows[0]].id
+      const id = ids[0]
       const result = await undoAllocation(id)
       result instanceof Error
         ? this.props.setError(result.message)

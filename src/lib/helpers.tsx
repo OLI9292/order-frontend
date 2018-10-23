@@ -21,3 +21,8 @@ export const parseDateString = (str: string): string => {
   const t = moment(str, format)
   return t.isValid() ? t.format("M/D/YY H:mm") : str
 }
+
+export const selectedIds = () =>
+  Array.from(document.getElementsByClassName("row"))
+    .filter((r, i) => r.classList.contains("selected"))
+    .map(({ id }) => id)

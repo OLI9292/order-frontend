@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Route, Switch } from "react-router"
+import { Route, Switch, Redirect } from "react-router"
 import { Router } from "react-router-dom"
 
 import Login from "../login"
@@ -70,6 +70,7 @@ class App extends React.Component<any, State> {
             path="/home"
             render={() => <Home logout={this.login.bind(this)} />}
           />
+          <Route render={() => <Redirect to="login" />} />
         </Switch>
       </Router>
     )
