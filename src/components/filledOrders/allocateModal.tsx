@@ -64,6 +64,7 @@ class AllocateModal extends React.Component<Props, State> {
   public calulate() {
     const { quantities, selectedClients, model } = this.state
     const { ordersForAllocation, clients } = this.props
+
     clients.forEach(c => {
       if (selectedClients.indexOf(c) > -1) {
         quantities[c] = this.state.quantities[c]
@@ -71,21 +72,27 @@ class AllocateModal extends React.Component<Props, State> {
         delete quantities[c]
       }
     })
-    const allocations =
-      (model !== undefined || selectedClients.length === 1) &&
-      calulate(clients, selectedClients, quantities, ordersForAllocation, model)
 
-    if (allocations) {
-      const summary = allocations.map(
-        a =>
-          `Allocate ${a.quantity || "________"} to ${a.client} at $${a.price}.`
-      )
-      this.setState({
-        summary,
-        quantities,
-        allocations
-      })
-    }
+    const allocations =
+      model !== undefined || selectedClients.length === 1
+        ? calulate(
+            clients,
+            selectedClients,
+            quantities,
+            ordersForAllocation,
+            model
+          )
+        : undefined
+
+    const summary = (allocations || []).map(
+      a => `Allocate ${a.quantity || "________"} to ${a.client} at $${a.price}.`
+    )
+
+    this.setState({
+      summary,
+      quantities,
+      allocations
+    })
   }
 
   public allocate() {
@@ -189,13 +196,13 @@ class AllocateModal extends React.Component<Props, State> {
         <input
           type="checkbox"
           checked={model === Model.average}
-          onClick={() => this.editedModel(Model.average)}
+          onChange={() => this.editedModel(Model.average)}
         />
         <Text.s margin="0 15px 0 4px">Average</Text.s>
         <input
           type="checkbox"
           checked={model === Model.sequential}
-          onClick={() => this.editedModel(Model.sequential)}
+          onChange={() => this.editedModel(Model.sequential)}
         />
         <Text.s margin="0 0 0 4px">Sequential</Text.s>
       </FlexedDiv>
@@ -220,7 +227,7 @@ class AllocateModal extends React.Component<Props, State> {
     return (
       <div>
         <DimOverlay onClick={this.props.closeModal.bind(this)} />
-        <Modal>
+        <Modal paddingBottom={100}>
           <Header.ms margin="0 0 20px 0">
             {`Allocating ${total} ${
               direction === BuySell.B ? "buy" : "sell"

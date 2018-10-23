@@ -1,3 +1,4 @@
+import * as moment from "moment"
 import { isArray, findIndex, extend } from "lodash"
 
 export const toArray = (arg: any): any[] => (isArray(arg) ? arg : [arg])
@@ -14,3 +15,14 @@ export function updateObjects<T extends { id: any }>(
   })
   return original
 }
+
+export const parseDateString = (str: string): string => {
+  const format = str.includes(":") ? "YYYY-MM-DDTHH:mm:ss.SSS" : "x"
+  const t = moment(str, format)
+  return t.isValid() ? t.format("M/D/YY H:mm") : str
+}
+
+export const selectedIds = () =>
+  Array.from(document.getElementsByClassName("row"))
+    .filter((r, i) => r.classList.contains("selected"))
+    .map(({ id }) => id)

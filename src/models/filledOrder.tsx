@@ -76,7 +76,7 @@ export const updateFilledOrders = async (
   return query(gqlQuery, "updateFilledOrders")
 }
 
-interface AllocationResult {
+export interface AllocationResult {
   accountTrades: AccountTrade[]
   groupedTrade: GroupedTrade
   filledOrders: FilledOrder[]
@@ -91,9 +91,11 @@ export const allocateFilledOrders = async (
     allocateFilledOrders(ids: "${ids.join(",")}", data: "${encoded}") {
       groupedTrade {
         id
+        created_at
       } 
       accountTrades {
         id
+        created_at
       }
       filledOrders {
         id

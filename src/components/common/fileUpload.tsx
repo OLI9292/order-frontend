@@ -32,6 +32,7 @@ class FileUpload extends React.Component<Props, any> {
       const fd = new FormData()
       fd.append("file", file)
       const result = await uploadFilledOrders(fd)
+      console.log(result)
       if (result instanceof Error) {
         this.props.setError(result.message)
       } else {

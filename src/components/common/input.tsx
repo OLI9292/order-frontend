@@ -1,15 +1,21 @@
 import styled from "styled-components"
 import colors from "../../lib/colors"
 
+interface Props {
+  underline?: boolean
+}
+
 const M = styled.input`
   font-family: Source Sans Pro;
   outline: none;
   display: block;
-  border: none;
+  border: 0;
+  border-bottom: ${(p: Props) => (p.underline ? "1px solid black" : "none")};
   box-sizing: border-box;
   font-size: 16px;
-  font-weight: 300px;
+  font-weight: 300;
   color: ${colors.darkGrey};
+  padding: 3px 0;
 `
 
 const Submit = M.extend`

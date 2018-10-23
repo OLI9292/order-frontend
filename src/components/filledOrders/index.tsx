@@ -5,6 +5,7 @@ import { includes, uniq, sum, isEqual, findIndex } from "lodash"
 import Table from "../table"
 import FileUpload from "../common/fileUpload"
 import Button from "../common/button"
+import FlexedDiv from "../common/flexedDiv"
 
 import AllocateModal, { OrdersForAllocation } from "./allocateModal"
 import { DateRange } from "../home/index"
@@ -18,13 +19,10 @@ import {
   updateFilledOrders
 } from "../../models/filledOrder"
 
-import FlexedDiv from "../common/flexedDiv"
-
 import { updateObjects, toArray } from "../../lib/helpers"
 
 interface State {
   filledOrders: FilledOrder[]
-  selectedRows: number[]
   ordersForAllocation?: OrdersForAllocation
 }
 
@@ -40,8 +38,7 @@ class FilledOrders extends React.Component<Props, State> {
     super(props)
 
     this.state = {
-      filledOrders: [],
-      selectedRows: []
+      filledOrders: []
     }
   }
 
@@ -61,9 +58,13 @@ class FilledOrders extends React.Component<Props, State> {
   public async loadData(dateRange: DateRange) {
     const [startDate, endDate] = dateRange
     const filledOrders = await fetchFilledOrders(startDate, endDate)
-    filledOrders instanceof Error
-      ? this.props.setError(filledOrders.message)
-      : this.setState({ filledOrders })
+    if (filledOrders instanceof Error) {
+      this.props.setError(filledOrders.message)
+    } else {
+      filledOrders.length === 0
+        ? this.props.setError("No data found for this date range.")
+        : this.setState({ filledOrders })
+    }
   }
 
   public uploadedFilledOrders(filledOrders: FilledOrder[]) {
@@ -73,8 +74,10 @@ class FilledOrders extends React.Component<Props, State> {
 
   public clickedAllocate() {
     const { filledOrders } = this.state
-    const selectedRows = this.table.current!.state.selectedRows
-    const orders = filledOrders.filter((o, i) => includes(selectedRows, i))
+    const selectedIds = Array.from(document.getElementsByClassName("row"))
+      .filter((r, i) => r.classList.contains("selected"))
+      .map(({ id }) => id)
+    const orders = filledOrders.filter(({ id }) => includes(selectedIds, id))
     const direction = uniq(orders.map(f => f.buy_sell))
     const instrument = uniq(orders.map(f => f.external_symbol))
     const total = sum(orders.map(f => parseFloat(String(f.quantity))))
@@ -106,7 +109,7 @@ class FilledOrders extends React.Component<Props, State> {
     let { filledOrders } = this.state
     const result = await allocateFilledOrders(ids, data)
     if (result instanceof Error) {
-      window.alert(result.message)
+      this.props.setError(result.message)
     } else {
       filledOrders = updateObjects(filledOrders, result.filledOrders)
       this.setState(
@@ -129,10 +132,7 @@ class FilledOrders extends React.Component<Props, State> {
     } else {
       this.props.setError(undefined)
       toArray(result).forEach((updated: FilledOrder) => {
-        const idx = findIndex(
-          filledOrders,
-          f => f.external_trade_id === updated.external_trade_id
-        )
+        const idx = findIndex(filledOrders, ({ id }) => id === updated.id)
         filledOrders[idx] = updated
       })
       this.setState({ filledOrders })
@@ -143,7 +143,7 @@ class FilledOrders extends React.Component<Props, State> {
     const { filledOrders, ordersForAllocation } = this.state
 
     return (
-      <div>
+      <div style={{ height: "80vh" }}>
         {ordersForAllocation && (
           <AllocateModal
             allocate={this.allocate.bind(this)}
@@ -160,7 +160,10 @@ class FilledOrders extends React.Component<Props, State> {
           data={filledOrders}
         />
 
-        <FlexedDiv margin="10px 0 0 0">
+        <FlexedDiv
+          style={{ position: "absolute", bottom: "20px" }}
+          margin="10px 0 0 0"
+        >
           <Button.m
             white={true}
             margin="0 10px 0 0"

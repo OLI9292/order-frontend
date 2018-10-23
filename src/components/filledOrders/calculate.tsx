@@ -22,7 +22,7 @@ const calculate = (
     sum(ordersForAllocation.filledOrders.map(f => f.quantity * f.price)) /
     ordersForAllocation.total
 
-  if (!model) {
+  if (selectedClients.length === 1) {
     const quantity = ordersForAllocation.total
     return [
       {
@@ -42,7 +42,9 @@ const calculate = (
     partialQuanity: 0,
     totalPrice: 0
   }))
+
   const quantities = allocations.map(a => a.quantity)
+
   const invalid =
     quantities.some(q => !Number(q)) ||
     sum(quantities) !== ordersForAllocation.total

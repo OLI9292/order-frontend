@@ -1,33 +1,37 @@
 import * as React from "react"
-import * as moment from "moment"
-
 import { isBoolean, includes } from "lodash"
-import { Cell, Row, RowInput, Form } from "./components"
+
+import { Cell, Row, RowInput, CellForm, CopyIcon } from "./components"
+
+import copy from "../../lib/assets/images/icon-copy.png"
+
+import { parseDateString } from "../../lib/helpers"
 
 interface Props {
   visibleHeaders: string[]
   rowIdx: number
   data: any
-  isEditing: string
+  isEditing?: string
   holdingShift: boolean
   editableFields: string[]
-  unselectAllRows: () => void
-  selectedRow: (i: number, selected: boolean) => void
-  editRow: (key: string) => void
-  updated?: (rowIdx: number, header: string, newValue: string) => void
+  editRow: (key?: string) => void
+  updated?: (id: string, header: string, newValue: string) => void
+  deselectCount: number
+  selectedAllCount: number
+  selectedRow: (rowIdx: number) => void
 }
 
 interface State {
   newValue: string
   isSelected: boolean
+  isHovering: boolean
 }
 
 const parsedValue = (v: any, header: string): string => {
   if (isBoolean(v)) {
     return String(v)
-  } else if (header === "trade_date") {
-    const t = moment(v, "x")
-    return t.isValid() ? t.format("M/D/YY H:mm") : v
+  } else if (includes(["trade_date", "created_at"], header)) {
+    return parseDateString(v)
   }
   return v
 }
@@ -37,12 +41,37 @@ class RowComponent extends React.Component<Props, State> {
     super(props)
     this.state = {
       newValue: "",
-      isSelected: false
+      isSelected: false,
+      isHovering: false
     }
   }
 
+  public componentWillReceiveProps(nextProps: Props) {
+    const { selectedAllCount, deselectCount } = this.props
+    const { isSelected } = this.state
+    if (deselectCount < nextProps.deselectCount && isSelected) {
+      this.setState({ isSelected: false })
+    } else if (selectedAllCount < nextProps.selectedAllCount && !isSelected) {
+      this.setState({ isSelected: true })
+    }
+  }
+
+  public clickedCopy() {
+    const { data, visibleHeaders } = this.props
+    const information = visibleHeaders
+      .map((k: string) => parsedValue(data[k], k))
+      .join(",")
+    const copyHelper = document.createElement("input")
+    copyHelper.className = "copyHelper"
+    document.body.appendChild(copyHelper)
+    copyHelper.value = information
+    copyHelper.select()
+    document.execCommand("copy")
+    document.body.removeChild(copyHelper)
+  }
+
   public render() {
-    const { newValue, isSelected } = this.state
+    const { newValue, isSelected, isHovering } = this.state
 
     const {
       visibleHeaders,
@@ -55,11 +84,11 @@ class RowComponent extends React.Component<Props, State> {
     } = this.props
 
     const input = (header: string) => (
-      <Form
+      <CellForm
         onSubmit={e => {
           e.preventDefault()
           if (updated) {
-            updated(rowIdx, header, newValue)
+            updated(data.id, header, newValue)
           }
         }}
       >
@@ -67,25 +96,37 @@ class RowComponent extends React.Component<Props, State> {
           onChange={e => this.setState({ newValue: e.target.value })}
           value={newValue}
           autoFocus={true}
+          onBlur={() => this.setState({ newValue: "" }, this.props.editRow)}
         />
-      </Form>
+      </CellForm>
     )
 
     return (
-      <Row selected={isSelected}>
+      <Row
+        onMouseEnter={() => this.setState({ isHovering: true })}
+        onMouseLeave={() => this.setState({ isHovering: false })}
+        id={data.id}
+        className={`row${isSelected ? " selected" : ""}`}
+        selected={isSelected}
+      >
+        <Cell white={true} holdingShift={holdingShift} editable={false}>
+          <CopyIcon
+            onClick={this.clickedCopy.bind(this)}
+            hide={!isHovering}
+            src={copy}
+          />
+        </Cell>
         {visibleHeaders.map((k: string) => (
           <Cell
-            key={k}
+            key={`${k}-${rowIdx}`}
             holdingShift={holdingShift}
-            onClick={() => {
-              if (holdingShift) {
-                this.setState({ isSelected: !isSelected }, () =>
-                  this.props.selectedRow(rowIdx, !isSelected)
-                )
-              } else if (includes(editableFields, k)) {
+            onClick={e => {
+              if (includes(editableFields, k)) {
                 this.props.editRow(`${rowIdx}-${k}`)
               } else {
-                this.props.unselectAllRows()
+                this.setState({ isSelected: !isSelected }, () =>
+                  this.props.selectedRow(rowIdx)
+                )
               }
             }}
             editable={includes(editableFields, k)}
