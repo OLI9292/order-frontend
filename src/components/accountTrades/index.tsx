@@ -42,9 +42,10 @@ class AccountTrades extends React.Component<Props, State> {
     if (accountTrades instanceof Error) {
       this.props.setError(accountTrades.message)
     } else {
-      accountTrades.length === 0
-        ? this.props.setError("No data found for this date range.")
-        : this.setState({ accountTrades })
+      this.setState({ accountTrades })
+      if (accountTrades.length === 0) {
+        this.props.setError("No data found for this date range.")
+      }
     }
   }
 

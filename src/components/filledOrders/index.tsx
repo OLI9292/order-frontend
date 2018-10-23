@@ -61,9 +61,10 @@ class FilledOrders extends React.Component<Props, State> {
     if (filledOrders instanceof Error) {
       this.props.setError(filledOrders.message)
     } else {
-      filledOrders.length === 0
-        ? this.props.setError("No data found for this date range.")
-        : this.setState({ filledOrders })
+      this.setState({ filledOrders })
+      if (filledOrders.length === 0) {
+        this.props.setError("No data found for this date range.")
+      }
     }
   }
 

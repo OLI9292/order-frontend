@@ -8,11 +8,14 @@ import Home from "../home"
 import history from "../../history"
 import ProtectedRoute, { ProtectedRouteProps } from "./protectedRoute"
 
+import { fetchUserFromStorage, User } from "../../models/user"
+
 import "./index.css"
 
 interface State {
   isAuthenticated: boolean
   checkedAuth: boolean
+  user?: User
 }
 
 class App extends React.Component<any, State> {
@@ -20,7 +23,7 @@ class App extends React.Component<any, State> {
     super(props)
 
     this.state = {
-      isAuthenticated: true,
+      isAuthenticated: false,
       checkedAuth: false
     }
   }
@@ -30,10 +33,9 @@ class App extends React.Component<any, State> {
   }
 
   public async checkForAuth() {
-    /* TODO: - add user table
     const user = fetchUserFromStorage()
     const isAuthenticated = user !== null
-    this.setState({ user, checkedAuth: true, isAuthenticated }) */
+    this.setState({ user, checkedAuth: true, isAuthenticated })
   }
 
   public login(cb: () => void) {
@@ -45,11 +47,11 @@ class App extends React.Component<any, State> {
   }
 
   public render() {
-    const { isAuthenticated } = this.state
+    const { isAuthenticated, checkedAuth } = this.state
 
-    /* if (!checkedAuth) {
+    if (!checkedAuth) {
       return null
-    } */
+    }
 
     const defaultProtectedRouteProps: ProtectedRouteProps = {
       isAuthenticated,
