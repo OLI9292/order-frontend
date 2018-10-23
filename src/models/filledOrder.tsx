@@ -76,7 +76,7 @@ export const updateFilledOrders = async (
   return query(gqlQuery, "updateFilledOrders")
 }
 
-interface AllocationResult {
+export interface AllocationResult {
   accountTrades: AccountTrade[]
   groupedTrade: GroupedTrade
   filledOrders: FilledOrder[]

@@ -77,14 +77,17 @@ class Home extends React.Component<Props, State> {
       this.state.startDate && this.state.endDate
         ? [
             this.state.startDate.format("YYYY-MM-DDTHH:mm:ss.SSS[Z]"),
-            this.state.endDate.format("YYYY-MM-DDTHH:mm:ss.SSS[Z]")
+            this.state.endDate
+              .clone()
+              .add(1, "d")
+              .format("YYYY-MM-DDTHH:mm:ss.SSS[Z]")
           ]
         : undefined
 
     return (
       <Container>
         <UpperContainer>
-          <FlexedDiv height={"100px"} justifyContent={"space-between"}>
+          <FlexedDiv height={"75px"} justifyContent={"space-between"}>
             <FlexedDiv alignItems="flex-start">
               <Header.m margin="0 25px 0 0">
                 {headers[this.state.table]}
@@ -144,10 +147,16 @@ class Home extends React.Component<Props, State> {
               />
             ),
             accountTrade: (
-              <AccountTradesTable setError={this.setError.bind(this)} />
+              <AccountTradesTable
+                dateRange={dateRange}
+                setError={this.setError.bind(this)}
+              />
             ),
             groupedTrade: (
-              <GroupedTradesTable setError={this.setError.bind(this)} />
+              <GroupedTradesTable
+                dateRange={dateRange}
+                setError={this.setError.bind(this)}
+              />
             )
           }[this.state.table]
         }

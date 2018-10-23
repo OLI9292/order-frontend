@@ -9,5 +9,5 @@ export const Container = styled.div`
 `
 
 export const UpperContainer = styled.div`
-  height: 25vh;
+  height: 20vh;
 `

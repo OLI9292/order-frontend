@@ -5,6 +5,7 @@ import { includes, uniq, sum, isEqual, findIndex } from "lodash"
 import Table from "../table"
 import FileUpload from "../common/fileUpload"
 import Button from "../common/button"
+import FlexedDiv from "../common/flexedDiv"
 
 import AllocateModal, { OrdersForAllocation } from "./allocateModal"
 import { DateRange } from "../home/index"
@@ -17,8 +18,6 @@ import {
   updateFilledOrder,
   updateFilledOrders
 } from "../../models/filledOrder"
-
-import FlexedDiv from "../common/flexedDiv"
 
 import { updateObjects, toArray } from "../../lib/helpers"
 
@@ -143,7 +142,7 @@ class FilledOrders extends React.Component<Props, State> {
     const { filledOrders, ordersForAllocation } = this.state
 
     return (
-      <div>
+      <div style={{ height: "80vh" }}>
         {ordersForAllocation && (
           <AllocateModal
             allocate={this.allocate.bind(this)}
@@ -160,7 +159,10 @@ class FilledOrders extends React.Component<Props, State> {
           data={filledOrders}
         />
 
-        <FlexedDiv margin="10px 0 0 0">
+        <FlexedDiv
+          style={{ position: "absolute", bottom: "20px" }}
+          margin="10px 0 0 0"
+        >
           <Button.m
             white={true}
             margin="0 10px 0 0"

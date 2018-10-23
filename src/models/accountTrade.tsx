@@ -10,7 +10,11 @@ export interface AccountTrade {
   external_symbol: string
 }
 
-const fields = "id client buy_sell quantity price external_symbol"
+const fields =
+  "id grouped_trade_id client buy_sell quantity price external_symbol created_at"
 
-export const fetchAccountTrades = async (): Promise<AccountTrade[] | Error> =>
-  rows("account_trade", "AccountTrade", "", "", fields)
+export const fetchAccountTrades = async (
+  startDate: string,
+  endDate: string
+): Promise<AccountTrade[] | Error> =>
+  rows("account_trade", "AccountTrade", startDate, endDate, fields)

@@ -5,7 +5,9 @@ import FlexedDiv from "../common/flexedDiv"
 
 export const Container = styled.div`
   width: 100%;
-  position: relative;
+  padding: 5px;
+  box-sizing: border-box;
+  border: 1px solid ${colors.grey};
 `
 
 export const TableContainer = styled.div`
@@ -26,11 +28,15 @@ export const HeaderRow = styled.tr`
   height: 50px;
 `
 
+interface TableHeaderProps {
+  slim?: boolean
+}
+
 export const TableHeader = styled.th`
   border-bottom: 1px solid ${colors.grey};
   border-top: 1px solid ${colors.grey};
   padding: 0px 5px;
-  min-width: 65px;
+  min-width: ${(p: TableHeaderProps) => (p.slim ? "10px" : "65px")};
   position: relative;
   padding-bottom: 15px;
   font-weight: 400;
@@ -39,9 +45,11 @@ export const TableHeader = styled.th`
 interface CellProps {
   holdingShift: boolean
   editable: boolean
+  white?: boolean
 }
 
 export const Cell = styled.td`
+  background-color: ${(p: CellProps) => p.white && "white !important"};
   white-space: nowrap;
   padding: 0px 10px;
   cursor: ${(p: CellProps) =>
@@ -56,6 +64,7 @@ interface IconProps {
   small?: boolean
   position?: string
   bottom?: number
+  hide: boolean
 }
 
 export const Icon = styled.img`
@@ -66,6 +75,7 @@ export const Icon = styled.img`
   bottom: ${(p: IconProps) => p.bottom};
   cursor: pointer;
   margin-right: 3px;
+  opacity: ${(p: IconProps) => (p.hide ? 0 : 1)};
 `
 
 export const ColumnSettingsContainer = FlexedDiv.extend`
@@ -109,18 +119,31 @@ export const RowInput = styled.input`
   font-weight: 300px;
 `
 
-export const Form = styled.form`
+export const CellForm = styled.form`
   width: 100%;
   height: 100%;
 `
 
 export const RowCountBox = styled.div`
   position: absolute;
-  right: 0;
+  right: 20px;
+  bottom: 20px;
   text-align: right;
 `
 
 export const DeselectSpan = styled.span`
   cursor: pointer;
   color: ${colors.red};
+`
+
+interface CopyIconProps {
+  hide: boolean
+}
+
+export const CopyIcon = styled.img`
+  opacity: ${(p: CopyIconProps) => (p.hide ? 0 : 1)};
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  vertical-align: middle;
 `

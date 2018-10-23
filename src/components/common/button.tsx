@@ -7,7 +7,7 @@ interface Props {
 }
 
 const M = styled.p`
-  width: 110px;
+  min-width: 100px;
   height: 35px;
   background-color: ${(p: Props) => (p.white ? "white" : colors.blue)};
   color: ${(p: Props) => (p.white ? colors.darkGrey : "white")};
@@ -18,6 +18,7 @@ const M = styled.p`
   font-family: Source Sans Pro;
   cursor: pointer;
   border-radius: 5px;
+  padding: 0 10px;
   font-weight: 400;
   margin: ${(p: Props) => p.margin};
 `

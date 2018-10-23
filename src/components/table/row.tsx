@@ -1,7 +1,9 @@
 import * as React from "react"
-
 import { isBoolean, includes } from "lodash"
-import { Cell, Row, RowInput, Form } from "./components"
+
+import { Cell, Row, RowInput, CellForm, CopyIcon } from "./components"
+
+import copy from "../../lib/assets/images/icon-copy.png"
 
 import { parseDateString } from "../../lib/helpers"
 
@@ -15,18 +17,20 @@ interface Props {
   editRow: (key: string) => void
   updated?: (rowIdx: number, header: string, newValue: string) => void
   deselectCount: number
+  selectedAllCount: number
   selectedRow: (rowIdx: number) => void
 }
 
 interface State {
   newValue: string
   isSelected: boolean
+  isHovering: boolean
 }
 
 const parsedValue = (v: any, header: string): string => {
   if (isBoolean(v)) {
     return String(v)
-  } else if (header === "trade_date") {
+  } else if (includes(["trade_date", "created_at"], header)) {
     return parseDateString(v)
   }
   return v
@@ -37,21 +41,37 @@ class RowComponent extends React.Component<Props, State> {
     super(props)
     this.state = {
       newValue: "",
-      isSelected: false
+      isSelected: false,
+      isHovering: false
     }
   }
 
   public componentWillReceiveProps(nextProps: Props) {
-    if (
-      this.props.deselectCount < nextProps.deselectCount &&
-      this.state.isSelected
-    ) {
+    const { selectedAllCount, deselectCount } = this.props
+    const { isSelected } = this.state
+    if (deselectCount < nextProps.deselectCount && isSelected) {
       this.setState({ isSelected: false })
+    } else if (selectedAllCount < nextProps.selectedAllCount && !isSelected) {
+      this.setState({ isSelected: true })
     }
   }
 
+  public clickedCopy() {
+    const { data, visibleHeaders } = this.props
+    const information = visibleHeaders
+      .map((k: string) => parsedValue(data[k], k))
+      .join(",")
+    const copyHelper = document.createElement("input")
+    copyHelper.className = "copyHelper"
+    document.body.appendChild(copyHelper)
+    copyHelper.value = information
+    copyHelper.select()
+    document.execCommand("copy")
+    document.body.removeChild(copyHelper)
+  }
+
   public render() {
-    const { newValue, isSelected } = this.state
+    const { newValue, isSelected, isHovering } = this.state
 
     const {
       visibleHeaders,
@@ -64,7 +84,7 @@ class RowComponent extends React.Component<Props, State> {
     } = this.props
 
     const input = (header: string) => (
-      <Form
+      <CellForm
         onSubmit={e => {
           e.preventDefault()
           if (updated) {
@@ -77,14 +97,23 @@ class RowComponent extends React.Component<Props, State> {
           value={newValue}
           autoFocus={true}
         />
-      </Form>
+      </CellForm>
     )
 
     return (
       <Row
+        onMouseEnter={() => this.setState({ isHovering: true })}
+        onMouseLeave={() => this.setState({ isHovering: false })}
         className={`row${isSelected ? " selected" : ""}`}
         selected={isSelected}
       >
+        <Cell white={true} holdingShift={holdingShift} editable={false}>
+          <CopyIcon
+            onClick={this.clickedCopy.bind(this)}
+            hide={!isHovering}
+            src={copy}
+          />
+        </Cell>
         {visibleHeaders.map((k: string) => (
           <Cell
             key={`${k}-${rowIdx}`}

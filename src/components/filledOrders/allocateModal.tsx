@@ -227,7 +227,7 @@ class AllocateModal extends React.Component<Props, State> {
     return (
       <div>
         <DimOverlay onClick={this.props.closeModal.bind(this)} />
-        <Modal>
+        <Modal paddingBottom={100}>
           <Header.ms margin="0 0 20px 0">
             {`Allocating ${total} ${
               direction === BuySell.B ? "buy" : "sell"

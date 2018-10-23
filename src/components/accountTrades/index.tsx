@@ -1,13 +1,16 @@
 import * as React from "react"
+import { isEqual } from "lodash"
 
 import { fetchAccountTrades, AccountTrade } from "../../models/accountTrade"
 import Table from "../table"
+import { DateRange } from "../home/index"
 
 interface State {
   accountTrades: AccountTrade[]
 }
 
 interface Props {
+  dateRange?: DateRange
   setError: (error?: string) => void
 }
 
@@ -21,15 +24,32 @@ class AccountTrades extends React.Component<Props, State> {
   }
 
   public async componentDidMount() {
-    const accountTrades = await fetchAccountTrades()
+    if (this.props.dateRange) {
+      this.loadData(this.props.dateRange)
+    }
+  }
+
+  public async componentWillReceiveProps(nextProps: Props) {
+    const { dateRange } = nextProps
+    if (!isEqual(this.props.dateRange, dateRange) && dateRange) {
+      this.loadData(dateRange)
+    }
+  }
+
+  public async loadData(dateRange: DateRange) {
+    const [startDate, endDate] = dateRange
+    const accountTrades = await fetchAccountTrades(startDate, endDate)
     accountTrades instanceof Error
       ? this.props.setError(accountTrades.message)
       : this.setState({ accountTrades })
   }
 
   public render() {
-    const { accountTrades } = this.state
-    return <Table editableFields={[]} data={accountTrades} />
+    return (
+      <div style={{ height: "80vh" }}>
+        <Table editableFields={[]} data={this.state.accountTrades} />
+      </div>
+    )
   }
 }
 

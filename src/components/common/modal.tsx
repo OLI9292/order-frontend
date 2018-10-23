@@ -4,6 +4,10 @@ import colors from "../../lib/colors"
 
 import Text from "../common/text"
 
+interface ModalProps {
+  paddingBottom?: number
+}
+
 export const Modal = styled.div`
   background-color: white;
   position: fixed;
@@ -13,9 +17,10 @@ export const Modal = styled.div`
   padding: 20px 15px;
   box-shadow: 5px 10px 8px rgb(160, 160, 160);
   min-width: 400px;
-  min-height: 600px;
   z-index: 10;
   box-sizing: border-box;
+  padding-bottom: ${(p: ModalProps) =>
+    p.paddingBottom && `${p.paddingBottom}px`};
 `
 
 export const DimOverlay = styled.div`

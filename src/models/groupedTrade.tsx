@@ -1,5 +1,5 @@
-import { rows } from "./query"
-import { BuySell } from "./filledOrder"
+import { query, rows } from "./query"
+import { BuySell, AllocationResult } from "./filledOrder"
 
 export interface GroupedTrade {
   id: string
@@ -9,7 +9,31 @@ export interface GroupedTrade {
   allocation_type: string
 }
 
-const fields = "id buy_sell quantity external_symbol allocation_type"
+const fields = "id buy_sell quantity external_symbol allocation_type created_at"
 
-export const fetchGroupedTrades = async (): Promise<GroupedTrade[] | Error> =>
-  rows("grouped_trade", "GroupedTrade", "", "", fields)
+export const fetchGroupedTrades = async (
+  startDate: string,
+  endDate: string
+): Promise<GroupedTrade[] | Error> =>
+  rows("grouped_trade", "GroupedTrade", startDate, endDate, fields)
+
+export const undoAllocation = async (
+  groupedTradeId: string
+): Promise<AllocationResult | Error> => {
+  const gqlQuery = `mutation { 
+      undoAllocation(groupedTradeId: "${groupedTradeId}") {
+        groupedTrade {
+          id
+        } 
+        accountTrades {
+          id
+        }
+        filledOrders {
+          id
+          grouped_trade_id
+          assigned
+        }
+      } 
+    }`
+  return query(gqlQuery, "undoAllocation")
+}
