@@ -52,9 +52,10 @@ class GroupedTrades extends React.Component<Props, State> {
     if (groupedTrades instanceof Error) {
       this.props.setError(groupedTrades.message)
     } else {
-      groupedTrades.length === 0
-        ? this.props.setError("No data found for this date range.")
-        : this.setState({ groupedTrades })
+      this.setState({ groupedTrades })
+      if (groupedTrades.length === 0) {
+        this.props.setError("No data found for this date range.")
+      }
     }
   }
 
